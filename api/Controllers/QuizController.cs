@@ -8,7 +8,7 @@ namespace api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize]   // [Authorize] means you must be logged in to create a quiz
 public class QuizController : ControllerBase
 {
     private readonly IQuizRepository _repository;
@@ -22,6 +22,8 @@ public class QuizController : ControllerBase
 
     // GET: api/Quiz
     [HttpGet]
+    //Allows students access to quiz without logging in
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<QuizDto>>> GetQuizzes()
     {
         _logger.LogInformation("Fetching all quizzes");
@@ -56,6 +58,8 @@ public class QuizController : ControllerBase
 
     // GET: api/Quiz/5
     [HttpGet("{id}")]
+     //Allows students access to quizzes without logging in
+    [AllowAnonymous] 
     public async Task<ActionResult<QuizDto>> GetQuiz(int id)
     {
         var quiz = await _repository.GetQuizById(id);
@@ -91,7 +95,6 @@ public class QuizController : ControllerBase
     }
 
     // POST: api/Quiz
-    // [Authorize] means you must be logged in to create a quiz
     [HttpPost]
     public async Task<ActionResult<QuizDto>> CreateQuiz(QuizDto quizDto)
     {
@@ -149,7 +152,6 @@ public class QuizController : ControllerBase
 
     // PUT: api/Quiz/5
     [HttpPut("{id}")]
-    [Authorize]
     public async Task<IActionResult> UpdateQuiz(int id, QuizDto quizDto)
     {
         if (id != quizDto.QuizId)
@@ -202,7 +204,6 @@ public class QuizController : ControllerBase
 
     // DELETE: api/Quiz/5
     [HttpDelete("{id}")]
-    [Authorize]
     public async Task<IActionResult> DeleteQuiz(int id)
     {
         var quiz = await _repository.GetQuizById(id);
