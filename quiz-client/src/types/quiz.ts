@@ -8,6 +8,7 @@ export interface Question {
     questionId: number;
     text: string;
     type: number;
+    points: number;
     options: Option[];
 }
 

@@ -20,6 +20,7 @@ const QuizEditorPage: React.FC = () => {
             questionId: 0,
             text: '',
             type: 0, // Default to Single Choice
+            points: 1, // Default points
             options: [{ optionId: 0, text: '', isCorrect: false }]
         }]
     });
@@ -44,6 +45,7 @@ const QuizEditorPage: React.FC = () => {
             questionId: 0,
             text: '',
             type: 0, // Default to Single Choice
+            points: 1, // Default points
             options: [{ optionId: 0, text: '', isCorrect: false }]
         };
         setQuiz({ ...quiz, questions: [...quiz.questions, newQuestion] });
@@ -151,14 +153,14 @@ const QuizEditorPage: React.FC = () => {
                     <Card key={qIndex} className="mb-4 shadow-sm">
                         <Card.Body>
                             <Row className="mb-3">
-                                <Col md={8}>
+                                <Col md={6}>
                                     <Form.Control 
                                         type="text" placeholder="Question Text" 
                                         value={q.text} onChange={(e) => updateQuestion(qIndex, 'text', e.target.value)} required 
                                         className="bg-light"
                                     />
                                 </Col>
-                                <Col md={4}>
+                                <Col md={3}>
                                     <Form.Select 
                                         value={q.type} 
                                         onChange={(e) => updateQuestion(qIndex, 'type', Number(e.target.value))}
@@ -167,6 +169,18 @@ const QuizEditorPage: React.FC = () => {
                                         <option value={1}>Multiple Choice</option>
                                         <option value={2}>Text Answer</option>
                                     </Form.Select>
+                                </Col>
+                                <Col md={3}>
+                                    <div className="input-group">
+                                        <span className="input-group-text">Points</span>
+                                        <Form.Control 
+                                            type="number" 
+                                            value={q.points} 
+                                            onChange={(e) => updateQuestion(qIndex, 'points', Number(e.target.value))} 
+                                            min={1}
+                                            className="bg-light"
+                                        />
+                                    </div>
                                 </Col>
                             </Row>
 

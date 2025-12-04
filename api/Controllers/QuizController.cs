@@ -34,6 +34,7 @@ public class QuizController : ControllerBase
                 QuestionId = qn.QuestionId,
                 Text = qn.Text,
                 Type = qn.Type,
+                Points = qn.Points,
                 // We don't necessarily need options for the list view, but it's fine for now
             }).ToList()
         });
@@ -63,6 +64,7 @@ public class QuizController : ControllerBase
                 QuestionId = q.QuestionId,
                 Text = q.Text,
                 Type = q.Type,
+                Points = q.Points,
                 Options = q.Options.Select(o => new OptionDto
                 {
                     OptionId = o.OptionId,
@@ -90,6 +92,7 @@ public class QuizController : ControllerBase
             {
                 Text = q.Text,
                 Type = q.Type,
+                Points = q.Points,
                 Options = q.Options.Select(o => new Option
                 {
                     Text = o.Text,
@@ -129,6 +132,7 @@ public class QuizController : ControllerBase
             {
                 Text = questionDto.Text,
                 Type = questionDto.Type,
+                Points = questionDto.Points,
                 Options = questionDto.Options.Select(o => new Option
                 {
                     Text = o.Text,

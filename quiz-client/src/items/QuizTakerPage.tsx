@@ -52,18 +52,25 @@ const QuizTakerPage: React.FC = () => {
 
     // --- SCORING SYSTEM ---
 
+    // Calculate total possible points
+    const getTotalPoints = () => {
+        if (!quiz) return 0;
+        return quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0);
+    };
+
     const handleSubmit = () => {
         if (!quiz) return;
         let calculatedScore = 0;
 
         quiz.questions.forEach((q) => {
             const userAnswer = answers[q.questionId];
+            const questionPoints = q.points || 1;
 
             if (q.type === 0) { 
                 // Single Choice: User ID matches Correct ID
                 const correctOption = q.options.find(o => o.isCorrect);
                 if (correctOption && userAnswer === correctOption.optionId) {
-                    calculatedScore++;
+                    calculatedScore += questionPoints;
                 }
             } else if (q.type === 1) {
                 // Multiple Choice: Arrays must match exactly (contain all correct, no incorrect)
@@ -74,12 +81,12 @@ const QuizTakerPage: React.FC = () => {
                     correctIds.length === userIds.length && 
                     correctIds.every(id => userIds.includes(id));
                 
-                if (isCorrect) calculatedScore++;
+                if (isCorrect) calculatedScore += questionPoints;
             } else if (q.type === 2) {
                 // Text: Case-insensitive string match
                 const correctText = q.options[0]?.text || "";
                 if (String(userAnswer || "").trim().toLowerCase() === correctText.trim().toLowerCase()) {
-                    calculatedScore++;
+                    calculatedScore += questionPoints;
                 }
             }
         });
@@ -94,7 +101,8 @@ const QuizTakerPage: React.FC = () => {
 
     // --- RESULT VIEW ---
     if (submitted) {
-        const percentage = Math.round((score / quiz.questions.length) * 100);
+        const totalPoints = getTotalPoints();
+        const percentage = Math.round((score / totalPoints) * 100);
         let variant = "danger";
         if (percentage >= 50) variant = "warning";
         if (percentage >= 80) variant = "success";
@@ -120,7 +128,7 @@ const QuizTakerPage: React.FC = () => {
             <Container className="mt-5">
                 <Card className="p-5 shadow text-center mb-4">
                     <h2 className="mb-4">Quiz Completed!</h2>
-                    <h1 className={`display-1 text-${variant}`}>{score} / {quiz.questions.length}</h1>
+                    <h1 className={`display-1 text-${variant}`}>{score} / {totalPoints} pts</h1>
                     <p className="lead">You scored {percentage}%</p>
                     <ProgressBar now={percentage} variant={variant} className="mb-4" style={{ height: '20px' }} />
                     <div className="d-flex justify-content-center gap-3">
@@ -138,12 +146,17 @@ const QuizTakerPage: React.FC = () => {
                     return (
                         <Card key={q.questionId} className={`mb-3 border-${correct ? 'success' : 'danger'}`}>
                             <Card.Body>
-                                <Card.Title className="d-flex align-items-center mb-3">
-                                    <span className={`badge bg-${correct ? 'success' : 'danger'} me-2`}>
-                                        {correct ? '✓' : '✗'}
+                                <Card.Title className="d-flex justify-content-between align-items-center mb-3">
+                                    <div className="d-flex align-items-center">
+                                        <span className={`badge bg-${correct ? 'success' : 'danger'} me-2`}>
+                                            {correct ? '✓' : '✗'}
+                                        </span>
+                                        <span className="badge bg-secondary me-2">{index + 1}</span>
+                                        {q.text}
+                                    </div>
+                                    <span className={`badge bg-${correct ? 'success' : 'danger'}`}>
+                                        {correct ? (q.points || 1) : 0} / {q.points || 1} pt{(q.points || 1) !== 1 ? 's' : ''}
                                     </span>
-                                    <span className="badge bg-secondary me-2">{index + 1}</span>
-                                    {q.text}
                                 </Card.Title>
 
                                 {/* Show options with correct/wrong indicators */}
@@ -198,9 +211,12 @@ const QuizTakerPage: React.FC = () => {
             {quiz.questions.map((q, index) => (
                 <Card key={q.questionId} className="mb-4 shadow-sm">
                     <Card.Body>
-                        <Card.Title className="mb-3">
-                            <span className="badge bg-secondary me-2">{index + 1}</span>
-                            {q.text}
+                        <Card.Title className="mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span className="badge bg-secondary me-2">{index + 1}</span>
+                                {q.text}
+                            </div>
+                            <span className="badge bg-primary">{q.points || 1} pt{(q.points || 1) !== 1 ? 's' : ''}</span>
                         </Card.Title>
 
                         {/* RENDER OPTIONS BASED ON TYPE */}

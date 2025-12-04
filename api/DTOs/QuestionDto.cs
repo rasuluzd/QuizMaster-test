@@ -12,5 +12,8 @@ public class QuestionDto
 
     public QuestionType Type { get; set; }
 
+    // Points awarded for correct answer (default 1)
+    public int Points { get; set; } = 1;
+
     public List<OptionDto> Options { get; set; } = new List<OptionDto>();
 }
