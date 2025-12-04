@@ -52,8 +52,10 @@ builder.Services.AddAuthentication(options =>
 
 // 5. Add Controllers with JSON options (Fixes object cycles)
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-);
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+});
 
 // 6. Add CORS (Allow frontend to talk to backend)
 builder.Services.AddCors(options =>

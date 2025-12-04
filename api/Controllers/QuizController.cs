@@ -8,6 +8,7 @@ namespace api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class QuizController : ControllerBase
 {
     private readonly IQuizRepository _repository;
@@ -92,8 +93,7 @@ public class QuizController : ControllerBase
     // POST: api/Quiz
     // [Authorize] means you must be logged in to create a quiz
     [HttpPost]
-    [Authorize] 
-    public async Task<ActionResult<Quiz>> CreateQuiz(QuizDto quizDto)
+    public async Task<ActionResult<QuizDto>> CreateQuiz(QuizDto quizDto)
     {
         try
         {
@@ -117,7 +117,28 @@ public class QuizController : ControllerBase
 
             await _repository.CreateQuiz(quiz);
 
-            return CreatedAtAction(nameof(GetQuiz), new { id = quiz.QuizId }, quiz);
+            // Map Entity -> DTO for response
+            var createdQuizDto = new QuizDto
+            {
+                QuizId = quiz.QuizId,
+                Title = quiz.Title,
+                Description = quiz.Description,
+                Questions = quiz.Questions.Select(q => new QuestionDto
+                {
+                    QuestionId = q.QuestionId,
+                    Text = q.Text,
+                    Type = q.Type,
+                    Points = q.Points,
+                    Options = q.Options.Select(o => new OptionDto
+                    {
+                        OptionId = o.OptionId,
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            return CreatedAtAction(nameof(GetQuiz), new { id = quiz.QuizId }, createdQuizDto);
         }
         catch (Exception ex)
         {
