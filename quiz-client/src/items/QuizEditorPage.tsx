@@ -175,8 +175,8 @@ const QuizEditorPage: React.FC = () => {
                                         <span className="input-group-text">Points</span>
                                         <Form.Control 
                                             type="number" 
-                                            value={q.points} 
-                                            onChange={(e) => updateQuestion(qIndex, 'points', Number(e.target.value))} 
+                                            value={q.points || ''} 
+                                            onChange={(e) => updateQuestion(qIndex, 'points', e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
                                             min={1}
                                             placeholder="1"
                                             className="bg-light"
