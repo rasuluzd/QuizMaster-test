@@ -11,35 +11,46 @@ namespace api.Controllers;
 public class QuizController : ControllerBase
 {
     private readonly IQuizRepository _repository;
+    private readonly ILogger<QuizController> _logger;
 
-    public QuizController(IQuizRepository repository)
+    public QuizController(IQuizRepository repository, ILogger<QuizController> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
     // GET: api/Quiz
     [HttpGet]
     public async Task<ActionResult<IEnumerable<QuizDto>>> GetQuizzes()
     {
-        var quizzes = await _repository.GetAllQuizzes();
+        _logger.LogInformation("Fetching all quizzes");
         
-        // Map Entity -> DTO
-        var quizDtos = quizzes.Select(q => new QuizDto
+        try 
         {
-            QuizId = q.QuizId,
-            Title = q.Title,
-            Description = q.Description,
-            Questions = q.Questions.Select(qn => new QuestionDto
+            var quizzes = await _repository.GetAllQuizzes();
+            
+            // Map Entity -> DTO
+            var quizDtos = quizzes.Select(q => new QuizDto
             {
-                QuestionId = qn.QuestionId,
-                Text = qn.Text,
-                Type = qn.Type,
-                Points = qn.Points,
-                // We don't necessarily need options for the list view, but it's fine for now
-            }).ToList()
-        });
+                QuizId = q.QuizId,
+                Title = q.Title,
+                Description = q.Description,
+                Questions = q.Questions.Select(qn => new QuestionDto
+                {
+                    QuestionId = qn.QuestionId,
+                    Text = qn.Text,
+                    Type = qn.Type,
+                    Points = qn.Points,
+                }).ToList()
+            });
 
-        return Ok(quizDtos);
+            return Ok(quizDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[QuizController] Quiz list not found while executing _repository.GetAllQuizzes()");
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     // GET: api/Quiz/5
@@ -50,6 +61,7 @@ public class QuizController : ControllerBase
 
         if (quiz == null)
         {
+            _logger.LogError("[QuizController] Quiz not found for the QuizId {QuizId:0000}", id);
             return NotFound();
         }
 
@@ -83,27 +95,35 @@ public class QuizController : ControllerBase
     [Authorize] 
     public async Task<ActionResult<Quiz>> CreateQuiz(QuizDto quizDto)
     {
-        // Map DTO -> Entity
-        var quiz = new Quiz
+        try
         {
-            Title = quizDto.Title,
-            Description = quizDto.Description,
-            Questions = quizDto.Questions.Select(q => new Question
+            // Map DTO -> Entity
+            var quiz = new Quiz
             {
-                Text = q.Text,
-                Type = q.Type,
-                Points = q.Points,
-                Options = q.Options.Select(o => new Option
+                Title = quizDto.Title,
+                Description = quizDto.Description,
+                Questions = quizDto.Questions.Select(q => new Question
                 {
-                    Text = o.Text,
-                    IsCorrect = o.IsCorrect
+                    Text = q.Text,
+                    Type = q.Type,
+                    Points = q.Points,
+                    Options = q.Options.Select(o => new Option
+                    {
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
                 }).ToList()
-            }).ToList()
-        };
+            };
 
-        await _repository.CreateQuiz(quiz);
+            await _repository.CreateQuiz(quiz);
 
-        return CreatedAtAction(nameof(GetQuiz), new { id = quiz.QuizId }, quiz);
+            return CreatedAtAction(nameof(GetQuiz), new { id = quiz.QuizId }, quiz);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[QuizController] Quiz creation failed {@quizDto}", quizDto);
+            return BadRequest("Failed to create quiz");
+        }
     }
 
     // PUT: api/Quiz/5
@@ -117,34 +137,46 @@ public class QuizController : ControllerBase
         }
 
         var quiz = await _repository.GetQuizById(id);
-        if (quiz == null) return NotFound();
-
-        // Update basic properties
-        quiz.Title = quizDto.Title;
-        quiz.Description = quizDto.Description;
-
-        // Clear existing questions and options, then add updated ones
-        quiz.Questions.Clear();
-        
-        foreach (var questionDto in quizDto.Questions)
+        if (quiz == null)
         {
-            var question = new Question
-            {
-                Text = questionDto.Text,
-                Type = questionDto.Type,
-                Points = questionDto.Points,
-                Options = questionDto.Options.Select(o => new Option
-                {
-                    Text = o.Text,
-                    IsCorrect = o.IsCorrect
-                }).ToList()
-            };
-            quiz.Questions.Add(question);
+            _logger.LogError("[QuizController] Quiz not found when updating the QuizId {QuizId:0000}", id);
+            return NotFound();
         }
 
-        await _repository.UpdateQuiz(quiz);
+        try
+        {
+            // Update basic properties
+            quiz.Title = quizDto.Title;
+            quiz.Description = quizDto.Description;
 
-        return NoContent();
+            // Clear existing questions and options, then add updated ones
+            quiz.Questions.Clear();
+            
+            foreach (var questionDto in quizDto.Questions)
+            {
+                var question = new Question
+                {
+                    Text = questionDto.Text,
+                    Type = questionDto.Type,
+                    Points = questionDto.Points,
+                    Options = questionDto.Options.Select(o => new Option
+                    {
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                };
+                quiz.Questions.Add(question);
+            }
+
+            await _repository.UpdateQuiz(quiz);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[QuizController] Quiz update failed {@quiz}", quiz);
+            return BadRequest("Update failed");
+        }
     }
 
     // DELETE: api/Quiz/5
@@ -155,11 +187,19 @@ public class QuizController : ControllerBase
         var quiz = await _repository.GetQuizById(id);
         if (quiz == null)
         {
+            _logger.LogError("[QuizController] Quiz not found for the QuizId {QuizId:0000}", id);
             return NotFound();
         }
 
-        await _repository.DeleteQuiz(id);
-
-        return NoContent();
+        try
+        {
+            await _repository.DeleteQuiz(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[QuizController] Quiz deletion failed for the QuizId {QuizId:0000}", id);
+            return BadRequest("Deletion failed");
+        }
     }
 }
