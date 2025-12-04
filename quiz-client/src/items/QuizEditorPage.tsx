@@ -178,6 +178,7 @@ const QuizEditorPage: React.FC = () => {
                                             value={q.points} 
                                             onChange={(e) => updateQuestion(qIndex, 'points', Number(e.target.value))} 
                                             min={1}
+                                            placeholder="1"
                                             className="bg-light"
                                         />
                                     </div>

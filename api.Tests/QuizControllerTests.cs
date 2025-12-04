@@ -206,7 +206,7 @@ public class QuizControllerTests
 
         // We must ensure GetQuizById finds the quiz, otherwise it returns NotFound
         _mockRepository.Setup(repo => repo.GetQuizById(testId))
-            .ReturnsAsync(new Quiz { QuizId = testId });
+            .ReturnsAsync(new Quiz { QuizId = testId, Questions= new List<Question>() });
 
         _mockRepository.Setup(repo => repo.UpdateQuiz(It.IsAny<Quiz>()))
             .Returns(Task.CompletedTask);

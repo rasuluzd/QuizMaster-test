@@ -9,12 +9,11 @@ public class Question
     [Required]
     public string Text { get; set; } = string.Empty;
 
+    public int Points { get; set; } = 1;
+
     // Enum to store the type (Single, Multiple, Text)
     public QuestionType Type { get; set; } = QuestionType.SingleChoice;
 
-    // Points awarded for correct answer (default 1)
-    public int Points { get; set; } = 1;
-    
     // Foreign Key
     public int QuizId { get; set; }
     public virtual Quiz Quiz { get; set; } = null!;
